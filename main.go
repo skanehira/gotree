@@ -21,13 +21,9 @@ func walkDir(dir string, hasNexts []bool) {
 			continue
 		}
 
-		for k, hasNext := range hasNexts {
-			if k == 0 {
-				fmt.Print("|   ")
-				continue
-			}
+		for _, hasNext := range hasNexts {
 			if hasNext {
-				fmt.Print("|   ")
+				fmt.Print("│   ")
 			} else {
 				fmt.Print("    ")
 			}
