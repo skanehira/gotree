@@ -8,5 +8,13 @@ go get -u github.com/skanehira/gotree
 
 # Usage
 ```
-gotree .
+// default display current dir
+$ gotree
+
+// specified dir
+$ gotree ./dir
+
+// limit depth
+// default depth is 99
+$ gotree -L 2 .
 ```
