@@ -9,6 +9,18 @@ import (
 	"strings"
 )
 
+// color
+const (
+	colorCyan   = "\x1b[36m%s\x1b[0m"
+	colorYellow = "\x1b[33m%s\x1b[0m"
+)
+
+// flag
+var (
+	limit     = flag.Int("L", 99, "depth level")
+	colorMode = flag.Bool("C", false, "color mode")
+)
+
 func walkDir(dir string, hasNexts []bool, limit int) {
 	// get entry
 	infos, err := ioutil.ReadDir(dir)
@@ -37,7 +49,7 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 			}
 		}
 
-		// if file is symlink
+		// if file is symlink, print relative path
 		var name string
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
 			realPath, err := os.Readlink(filepath.Join(dir, info.Name()))
@@ -49,6 +61,15 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 			name = fmt.Sprintf("%s %s %s", info.Name(), "->", realPath)
 		} else {
 			name = info.Name()
+		}
+
+		// if color mode, add color
+		if *colorMode {
+			if info.IsDir() {
+				name = fmt.Sprintf(colorCyan, name)
+			} else {
+				name = fmt.Sprintf(colorYellow, name)
+			}
 		}
 
 		// print tree
@@ -74,7 +95,6 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 
 func parseArgs() (string, int) {
 	// get depth level
-	limit := flag.Int("L", 99, "depth level")
 	flag.Parse()
 
 	if *limit < 1 {
@@ -89,22 +109,19 @@ func parseArgs() (string, int) {
 	}
 
 	// print current dir
-	var current string
 	separator := string(os.PathSeparator)
-
-	if strings.HasSuffix(dir, separator) {
-		current = dir
-	} else {
-		current = dir + separator
+	if !strings.HasSuffix(dir, separator) {
+		dir += separator
 	}
 
-	return current, *limit
+	return dir, *limit
 }
 
 func main() {
 	// parse args
 	dir, limit := parseArgs()
 
+	// print current dir
 	fmt.Println(dir)
 
 	// walk dir
