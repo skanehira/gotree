@@ -8,28 +8,25 @@ import (
 	"strings"
 )
 
-type depth struct {
-	hasNext bool
-}
-
-func search(dir string, depths []depth) {
+func walkDir(dir string, hasNexts []bool) {
 	// Exclusion dotfiles
 	infos, err := ioutil.ReadDir(dir)
 	if err != nil {
 		panic(err)
 	}
 
+	// walk dir
 	for i, info := range infos {
 		if strings.HasPrefix(info.Name(), ".") {
 			continue
 		}
 
-		for k, depth := range depths {
+		for k, hasNext := range hasNexts {
 			if k == 0 {
 				fmt.Print("|   ")
 				continue
 			}
-			if depth.hasNext {
+			if hasNext {
 				fmt.Print("|   ")
 			} else {
 				fmt.Print("    ")
@@ -43,20 +40,23 @@ func search(dir string, depths []depth) {
 		}
 
 		if info.IsDir() {
-			var hasNext bool
 			if i == len(infos)-1 {
-				hasNext = false
+				hasNexts = append(hasNexts, false)
 			} else {
-				hasNext = true
+				hasNexts = append(hasNexts, true)
 			}
-			depths = append(depths, depth{hasNext})
-			search(filepath.Join(dir, info.Name()), depths)
-			depths = depths[:len(depths)-1]
+
+			walkDir(filepath.Join(dir, info.Name()), hasNexts)
+			hasNexts = hasNexts[:len(hasNexts)-1]
 		}
 	}
 }
 func main() {
 	dir := os.Args[1]
+
+	// print current dir
 	fmt.Println(dir)
-	search(dir, make([]depth, 0))
+
+	// walk dir
+	walkDir(dir, []bool{})
 }
