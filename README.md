@@ -1,5 +1,5 @@
 # gotree
-This is tree command writtn in go
+This is tree command written in go
 
 # Install
 ```
