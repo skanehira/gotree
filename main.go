@@ -29,10 +29,23 @@ func walkDir(dir string, hasNexts []bool) {
 			}
 		}
 
-		if i == len(infos)-1 {
-			fmt.Println("└──", info.Name())
+		// if file is symlink
+		var name string
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+			realPath, err := os.Readlink(filepath.Join(dir, info.Name()))
+			if err != nil {
+				panic(err)
+			}
+
+			name = fmt.Sprintf("%s %s %s", info.Name(), "->", realPath)
 		} else {
-			fmt.Println("├──", info.Name())
+			name = info.Name()
+		}
+
+		if i == len(infos)-1 {
+			fmt.Println("└──", name)
+		} else {
+			fmt.Println("├──", name)
 		}
 
 		if info.IsDir() {
@@ -47,11 +60,20 @@ func walkDir(dir string, hasNexts []bool) {
 		}
 	}
 }
+
 func main() {
 	dir := os.Args[1]
 
 	// print current dir
-	fmt.Println(dir)
+	var current string
+	separator := string(os.PathSeparator)
+	if strings.HasSuffix(dir, separator) {
+		current = dir
+	} else {
+		current = dir + separator
+	}
+
+	fmt.Println(current)
 
 	// walk dir
 	walkDir(dir, []bool{})
