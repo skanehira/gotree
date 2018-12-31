@@ -17,10 +17,11 @@ const (
 
 // flag
 var (
-	limit     = flag.Int("L", 99, "depth level")
-	colorMode = flag.Bool("C", false, "color mode")
-	dirCount  = 0
-	fileCount = 0
+	limit          = flag.Int("L", 99, "depth level")
+	isColorMode    = flag.Bool("C", false, "color mode")
+	exculudeTarget = flag.String("EX", "node_modules", "exclude specific file or dir")
+	dirCount       = 0
+	fileCount      = 0
 )
 
 func walkDir(dir string, hasNexts []bool, limit int) {
@@ -38,8 +39,8 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 
 	// walk dir
 	for i, info := range infos {
-		// Exclusion dotfiles
-		if strings.HasPrefix(info.Name(), ".") {
+		// exclude file or dir
+		if strings.HasPrefix(info.Name(), ".") || info.Name() == *exculudeTarget {
 			continue
 		}
 
@@ -66,7 +67,7 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 		}
 
 		// if color mode, add color
-		if *colorMode {
+		if *isColorMode {
 			if info.IsDir() {
 				name = fmt.Sprintf(colorCyan, name)
 			} else {

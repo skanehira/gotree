@@ -20,4 +20,7 @@ $ gotree -L 2 .
 
 // print ansi color mode
 $ gotree -C
+
+// exclude file or dir
+$ gotree -EX node_modules
 ```
