@@ -19,6 +19,8 @@ const (
 var (
 	limit     = flag.Int("L", 99, "depth level")
 	colorMode = flag.Bool("C", false, "color mode")
+	dirCount  = 0
+	fileCount = 0
 )
 
 func walkDir(dir string, hasNexts []bool, limit int) {
@@ -81,6 +83,7 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 
 		// if entry is dir, recursive search
 		if info.IsDir() {
+			dirCount++
 			if i == len(infos)-1 {
 				hasNexts = append(hasNexts, false)
 			} else {
@@ -89,6 +92,8 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 
 			walkDir(filepath.Join(dir, info.Name()), hasNexts, limit)
 			hasNexts = hasNexts[:len(hasNexts)-1]
+		} else {
+			fileCount++
 		}
 	}
 }
@@ -126,4 +131,6 @@ func main() {
 
 	// walk dir
 	walkDir(dir, []bool{}, limit)
+
+	fmt.Printf("\n%d directories, %d files\n", dirCount, fileCount)
 }
