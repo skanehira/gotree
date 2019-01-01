@@ -19,14 +19,18 @@ const (
 var (
 	limit          = flag.Int("L", 99, "depth level")
 	isColorMode    = flag.Bool("C", false, "color mode")
-	exculudeTarget = flag.String("EX", "node_modules", "exclude specific file or dir")
-	dirCount       = 0
-	fileCount      = 0
+	exculudeTarget = flag.String("EX", "", "exclude specific file or dir")
+)
+
+// count
+var (
+	dirCount  = 0
+	fileCount = 0
 )
 
 func walkDir(dir string, hasNexts []bool, limit int) {
-	// get entry
-	infos, err := ioutil.ReadDir(dir)
+	// get entries
+	entries, err := ioutil.ReadDir(dir)
 	if err != nil {
 		fmt.Printf("%s: %s", os.Args[0], err)
 		os.Exit(1)
@@ -38,9 +42,9 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 	}
 
 	// walk dir
-	for i, info := range infos {
+	for i, entry := range entries {
 		// exclude file or dir
-		if strings.HasPrefix(info.Name(), ".") || info.Name() == *exculudeTarget {
+		if strings.HasPrefix(entry.Name(), ".") || entry.Name() == *exculudeTarget {
 			continue
 		}
 
@@ -54,44 +58,46 @@ func walkDir(dir string, hasNexts []bool, limit int) {
 
 		// if file is symlink, print relative path
 		var name string
-		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
-			realPath, err := os.Readlink(filepath.Join(dir, info.Name()))
+		if entry.Mode()&os.ModeSymlink == os.ModeSymlink {
+			realPath, err := os.Readlink(filepath.Join(dir, entry.Name()))
 			if err != nil {
 				fmt.Printf("%s: %s", os.Args[0], err)
 				os.Exit(1)
 			}
 
-			name = fmt.Sprintf("%s %s %s", info.Name(), "->", realPath)
+			name = fmt.Sprintf("%s %s %s", entry.Name(), "->", realPath)
 		} else {
-			name = info.Name()
+			name = entry.Name()
 		}
 
 		// if color mode, add color
 		if *isColorMode {
-			if info.IsDir() {
+			if entry.IsDir() {
 				name = fmt.Sprintf(colorCyan, name)
 			} else {
 				name = fmt.Sprintf(colorYellow, name)
 			}
 		}
 
+		lastIndex := len(entries) - 1
+
 		// print tree
-		if i == len(infos)-1 {
+		if i == lastIndex {
 			fmt.Println("└──", name)
 		} else {
 			fmt.Println("├──", name)
 		}
 
 		// if entry is dir, recursive search
-		if info.IsDir() {
+		if entry.IsDir() {
 			dirCount++
-			if i == len(infos)-1 {
+			if i == lastIndex {
 				hasNexts = append(hasNexts, false)
 			} else {
 				hasNexts = append(hasNexts, true)
 			}
 
-			walkDir(filepath.Join(dir, info.Name()), hasNexts, limit)
+			walkDir(filepath.Join(dir, entry.Name()), hasNexts, limit)
 			hasNexts = hasNexts[:len(hasNexts)-1]
 		} else {
 			fileCount++
@@ -112,12 +118,6 @@ func parseArgs() (string, int) {
 	dir := flag.Arg(0)
 	if dir == "" {
 		dir = "."
-	}
-
-	// print current dir
-	separator := string(os.PathSeparator)
-	if !strings.HasSuffix(dir, separator) {
-		dir += separator
 	}
 
 	return dir, *limit
